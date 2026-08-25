@@ -1,8 +1,5 @@
 name: Deploy Hisab Tracker to GitHub Pages
-on:
-push:
-branches: ["main"]
-workflow_dispatch:
+on: [push, workflow_dispatch]
 permissions:
 contents: read
 pages: write
@@ -17,9 +14,8 @@ environment:
 name: github-pages
 url: ${{ steps.deployment.outputs.page_url }}
 steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-
+- name: Checkout
+uses: actions/checkout@v4
   - name: Setup pnpm
     uses: pnpm/action-setup@v4
     with:
