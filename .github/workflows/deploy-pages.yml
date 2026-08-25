@@ -23,12 +23,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+          cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build static client
@@ -42,6 +45,8 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+      - name: Prepare SPA fallback
+        run: cp dist/public/index.html dist/public/404.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
