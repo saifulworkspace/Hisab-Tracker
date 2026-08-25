@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1787224749443,
+      "tag": "0000_pink_kabuki",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1787227007281,
+      "tag": "0001_daily_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787227464482,
+      "tag": "0002_whole_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1787561816830,
+      "tag": "0003_harsh_lockheed",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1787561832742,
+      "tag": "0004_marvelous_xavin",
+      "breakpoints": true
+    }
+  ]
+}
