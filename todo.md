@@ -54,3 +54,31 @@
 - [x] Display recent received/paid settlement history in the Firebase dashboard
 - [x] Add Firebase-focused tests for zero-state defaults and UID-scoped document paths
 - [x] Create and verify a new post-migration source ZIP archive
+
+# GitHub Pages Deployment Fix
+
+- [x] Fix Actions failure: pnpm is referenced by setup-node cache before pnpm is installed
+- [x] Verify the corrected Pages workflow and provide rerun instructions
+
+# Live Firebase Login Fix
+
+- [x] Diagnose why the GitHub Pages Sign in button does not launch authentication
+- [x] Fix login flow and show actionable Firebase errors in the UI
+- [x] Re-run tests/build and provide redeploy instructions
+
+# Persistent Firebase Login Fix
+
+- [x] Verify the deployed GitHub Pages build contains the Firebase login bundle
+- [x] Diagnose silent click behavior and add robust popup/error handling
+- [x] Re-run tests/build and provide cache-safe redeploy steps
+
+# Final Live Auth Verification
+
+- [x] Add visible Google sign-in error handling and popup-blocked guidance
+- [ ] Redeploy the App.tsx fix and verify the live Pages URL shows the Firebase login UI
+- [ ] Send exact cache-safe redeploy and verification steps
+
+# GitHub Pages Subpath Routing Fix
+
+- [x] Make the Firebase app route correctly at `/Hisab-Tracker/` instead of rendering the custom 404 page
+- [x] Verify the static build and provide a fresh archive/redeploy steps
