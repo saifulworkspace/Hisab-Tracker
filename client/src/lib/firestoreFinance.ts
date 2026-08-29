@@ -4,9 +4,10 @@ import type { User } from "firebase/auth";
 import { firestore } from "./firebase";
 
 export type Currency = "BDT" | "SR";
-export type PersonRow = { id: string; personName: string; amount: number; currency: Currency; notes?: string; updatedAt?: number };
+export type PersonEntry = { id: string; amount: number; date: string; notes?: string; createdAt: number };
+export type PersonRow = { id: string; personName: string; amount: number; currency: Currency; notes?: string; entries?: PersonEntry[]; updatedAt?: number };
 export type PropertyPayment = { id: string; amount: number; paymentDate: string; currency: Currency; notes?: string };
-export type PropertyRow = { id: string; name: string; budget: number; currency: Currency; notes?: string; payments: PropertyPayment[]; updatedAt?: number };
+export type PropertyRow = { id: string; name: string; budget: number; currency: Currency; notes?: string; startDate?: string; payments: PropertyPayment[]; updatedAt?: number };
 export type FinanceTransaction = { id: string; personName: string; kind: "receivable_received" | "payable_paid"; amount: number; currency: Currency; transactionDate: string; notes?: string; createdAt: number };
 export type FinanceData = { receivables: PersonRow[]; payables: PersonRow[]; properties: PropertyRow[]; transactions: FinanceTransaction[] };
 
@@ -58,8 +59,27 @@ export async function savePerson(userId: string, kind: "receivables" | "payables
   const db = requireDb(); const id = input.id ?? crypto.randomUUID();
   await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount: Number(input.amount), currency: input.currency, notes: input.notes?.trim() ?? "", updatedAt: now() }, { merge: true });
 }
+export async function addPersonEntry(userId: string, kind: "receivables" | "payables", matched: PersonRow | undefined, input: { personName: string; amount: number; currency: Currency; date?: string; notes?: string }) {
+  const db = requireDb();
+  const amount = Number(input.amount);
+  const entryDate = input.date || new Date().toISOString().slice(0, 10);
+  const entry: PersonEntry = { id: crypto.randomUUID(), amount, date: entryDate, notes: input.notes?.trim() || "", createdAt: now() };
+  if (matched) {
+    const nextEntries = [...(matched.entries ?? []), entry];
+    const nextAmount = Number(matched.amount) + amount;
+    await setDoc(doc(db, "users", userId, kind, matched.id), { amount: nextAmount, entries: nextEntries, updatedAt: now() }, { merge: true });
+  } else {
+    const id = crypto.randomUUID();
+    await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount, currency: input.currency, notes: input.notes?.trim() ?? "", entries: [entry], updatedAt: now() }, { merge: true });
+  }
+}
 export async function removePerson(userId: string, kind: "receivables" | "payables", id: string) { await deleteDoc(doc(requireDb(), "users", userId, kind, id)); }
 export async function settlePerson(userId: string, kind: "receivables" | "payables", row: PersonRow, amount: number, transactionDate = new Date().toISOString().slice(0, 10), notes = "") { const next = Number(row.amount) - Number(amount); if (amount <= 0 || next < 0) throw new Error("Settlement amount is larger than the outstanding balance."); const db = requireDb(); await updateDoc(doc(db, "users", userId, kind, row.id), { amount: next, updatedAt: now() }); await addDoc(collection(db, "users", userId, "transactions"), { personName: row.personName, kind: kind === "receivables" ? "receivable_received" : "payable_paid", amount: Number(amount), currency: row.currency, transactionDate, notes, createdAt: now() }); }
-export async function saveProperty(userId: string, input: { id?: string; name: string; budget: number; currency: Currency; notes?: string }) { const id = input.id ?? crypto.randomUUID(); await setDoc(doc(requireDb(), "users", userId, "properties", id), { name: clean(input.name), budget: Number(input.budget), currency: input.currency, notes: input.notes?.trim() ?? "", payments: [], updatedAt: now() }, { merge: true }); }
+export async function saveProperty(userId: string, input: { id?: string; name: string; budget: number; currency: Currency; notes?: string; startDate?: string }) {
+  const db = requireDb(); const id = input.id ?? crypto.randomUUID();
+  const base: Record<string, unknown> = { name: clean(input.name), budget: Number(input.budget), currency: input.currency, notes: input.notes?.trim() ?? "", startDate: input.startDate ?? "", updatedAt: now() };
+  if (!input.id) base.payments = [];
+  await setDoc(doc(db, "users", userId, "properties", id), base, { merge: true });
+}
 export async function addPropertyPayment(userId: string, property: PropertyRow, payment: Omit<PropertyPayment, "id">) { const next = { ...property, payments: [...property.payments, { ...payment, id: crypto.randomUUID(), amount: Number(payment.amount) }], updatedAt: now() }; await setDoc(doc(requireDb(), "users", userId, "properties", property.id), next); }
 export async function removeProperty(userId: string, id: string) { await deleteDoc(doc(requireDb(), "users", userId, "properties", id)); }
