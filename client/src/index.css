@@ -97,6 +97,7 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 .mobile-header { display: none; }
 
 .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 17px; }
+.summary-grid.overview-summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .summary-card { min-height: 183px; padding: 21px 21px 17px; background: rgba(255,255,255,.9); border: 1px solid rgba(228,234,238,.9); border-radius: 17px; box-shadow: 0 13px 34px rgba(79,99,111,.045); }
 .summary-card.green { border-color: rgba(47,122,76,.3); background: linear-gradient(180deg, rgba(47,122,76,.07), rgba(255,255,255,.95)); }
 .summary-card.green .card-label { color: #2f7a4c; }
@@ -312,6 +313,7 @@ h2 span { color: #9ca6ad; font-weight: 500; }
   .app-sidebar { width: 194px; flex-basis: 194px; }
   .main-content { width: calc(100% - 194px); padding-right: 4%; padding-left: 4%; }
   .summary-grid { grid-template-columns: 1fr 1fr; }
+  .summary-grid.overview-summary-grid { grid-template-columns: 1fr 1fr; }
   .property-summary { grid-column: 1 / -1; }
   .overview-layout { grid-template-columns: 1fr; }
   .settings-layout { grid-template-columns: 1fr; }
@@ -334,6 +336,7 @@ h2 span { color: #9ca6ad; font-weight: 500; }
   .desktop-only { display: none; }
   h1 { font-size: 28px; }
   .summary-grid { grid-template-columns: 1fr; gap: 10px; }
+  .summary-grid.overview-summary-grid { grid-template-columns: 1fr; }
   .property-summary { grid-column: auto; }
   .summary-card { min-height: 160px; }
   .activity-card, .quick-card, .ledger-card, .property-ledger-card, .settings-card, .settings-note-card, .empty-ledger, .history-card, .property-card, .ledger-list { padding: 19px 16px; }
