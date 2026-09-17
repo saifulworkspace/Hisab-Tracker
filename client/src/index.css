@@ -107,6 +107,11 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 .summary-card.purple { border-color: rgba(122,95,160,.3); background: linear-gradient(180deg, rgba(122,95,160,.07), rgba(255,255,255,.95)); }
 .summary-card.purple .card-label { color: #7a5fa0; }
 .summary-card.purple .property-summary strong { color: #61497f; }
+.summary-card.blue { border-color: rgba(59,111,161,.3); background: linear-gradient(180deg, rgba(59,111,161,.07), rgba(255,255,255,.95)); }
+.summary-card.blue .card-label { color: #3b6fa1; }
+.summary-card.blue .currency-pairs strong { color: #2f5980; }
+.wallet-balance-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 22px; }
+.wallet-balance-grid .summary-card { min-height: auto; padding: 18px 20px; }
 .card-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; }
 .card-icon.blue { color: #6d9ab4; background: #e4f1f8; }
 .card-icon.pink { color: #b97584; background: #f9e8ec; }
@@ -144,7 +149,11 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 .entry-history > div { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: #67747b; font-size: 11px; }
 .entry-history > div span:first-child { flex: 0 0 auto; color: #a2abb1; font-size: 10px; }
 .entry-history > div strong { color: #2f7a4c; font-weight: 700; }
+.ledger-card:has(.avatar.red) .entry-history > div strong { color: #b5473d; }
 .entry-history > div small { flex: 1; overflow: hidden; color: #a2abb1; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.entry-actions { display: flex; gap: 4px; margin-left: auto; flex: 0 0 auto; }
+.entry-actions button { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid #e5eaee; border-radius: 7px; background: #fbfcfc; color: #8b969e; }
+.entry-actions button:hover { background: #fff; color: #2a3a43; }
 
 .overview-add-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
 .primary-action.tone-green { background: #2f7a4c !important; }
@@ -153,6 +162,8 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 .primary-action.tone-red:hover { background: #953b32 !important; }
 .primary-action.tone-purple { background: #7a5fa0 !important; }
 .primary-action.tone-purple:hover { background: #61497f !important; }
+.primary-action.tone-blue { background: #3b6fa1 !important; }
+.primary-action.tone-blue:hover { background: #2f5980 !important; }
 
 .property-card.purple .section-kicker { color: #7a5fa0; }
 .summary-card.purple .progress-track i { background: #b7a3d1; }
@@ -160,7 +171,7 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 
 .overview-layout { display: grid; grid-template-columns: minmax(0, 1.38fr) minmax(260px, .62fr); gap: 14px; }
 .content-card { background: rgba(255,255,255,.9); border: 1px solid rgba(228,234,238,.9); border-radius: 17px; box-shadow: 0 13px 34px rgba(79,99,111,.04); }
-.activity-card, .quick-card, .ledger-card, .property-ledger-card, .empty-ledger, .history-card, .property-card { padding: 23px 24px; }
+.activity-card, .quick-card, .ledger-card, .property-ledger-card, .empty-ledger, .history-card, .property-card, .ledger-list { padding: 23px 24px; }
 .section-stack { display: flex; flex-direction: column; gap: 18px; }
 .zero-state { padding: 26px 6px; text-align: center; color: #9ca7ad; font-size: 12px; }
 .zero-state strong { display: block; margin-bottom: 6px; color: #59656d; font-family: "Plus Jakarta Sans", sans-serif; font-size: 16px; }
@@ -325,7 +336,7 @@ h2 span { color: #9ca6ad; font-weight: 500; }
   .summary-grid { grid-template-columns: 1fr; gap: 10px; }
   .property-summary { grid-column: auto; }
   .summary-card { min-height: 160px; }
-  .activity-card, .quick-card, .ledger-card, .property-ledger-card, .settings-card, .settings-note-card, .empty-ledger, .history-card, .property-card { padding: 19px 16px; }
+  .activity-card, .quick-card, .ledger-card, .property-ledger-card, .settings-card, .settings-note-card, .empty-ledger, .history-card, .property-card, .ledger-list { padding: 19px 16px; }
   .ledger-row { flex-wrap: wrap; gap: 8px 12px; padding: 12px 2px; }
   .ledger-amount { align-items: flex-start; }
   .row-actions { width: 100%; padding-left: 44px; }
