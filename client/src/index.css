@@ -351,3 +351,27 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Salary cycle, category budgets */
+.cycle-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 4px 0 16px; }
+.cycle-nav { display: flex; align-items: center; gap: 8px; }
+.cycle-nav button { display: inline-flex; border: 1px solid #e5eaee; border-radius: 8px; padding: 6px 8px; background: #fbfcfc; color: #74838b; }
+.cycle-nav button:hover:not(:disabled) { background: #fff; color: #2a3a43; }
+.cycle-nav button:disabled { opacity: .4; cursor: default; }
+.cycle-label { font-size: 12px; font-weight: 700; color: #2a3a43; text-align: center; min-width: 150px; }
+.cycle-label small { display: block; margin-top: 2px; color: #7a858e; font-size: 10px; font-weight: 500; }
+.cycle-day { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #7a858e; }
+.cycle-day select { border: 1px solid #e0e7ea; border-radius: 8px; background: #fbfcfc; padding: 6px 8px; font-size: 12px; color: #303b42; }
+.show-all-toggle { margin: 0 0 10px; cursor: pointer; }
+.budget-card { padding: 19px 20px; margin-bottom: 18px; }
+.budget-form { display: grid; grid-template-columns: 1.3fr 1fr .6fr auto; gap: 8px; align-items: center; margin: 12px 0; }
+.budget-form select, .budget-form input { width: 100%; border: 1px solid #e0e7ea; border-radius: 9px; outline: none; background: #fbfcfc; color: #303b42; padding: 9px 10px; font-size: 12px; }
+.budget-form select:focus, .budget-form input:focus { border-color: #9fc5da; background: #fff; box-shadow: 0 0 0 3px #e6f2f8; }
+.budget-row { padding: 12px 0; border-bottom: 1px solid #f0f2f3; }
+.budget-row:last-child { border-bottom: 0; }
+.budget-row-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; flex-wrap: wrap; }
+.budget-row .progress-track { margin-top: 8px; }
+.budget-row.is-over .progress-track i { background: #e0a3a3; }
+.budget-note { display: block; margin-top: 6px; color: #7a858e; font-size: 10px; }
+.budget-row.is-over .budget-note { color: #b25c5c; }
+@media (max-width: 560px) { .budget-form { grid-template-columns: 1fr 1fr; } .cycle-bar { flex-direction: column; align-items: flex-start; } }
