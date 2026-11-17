@@ -375,3 +375,6 @@ h2 span { color: #9ca6ad; font-weight: 500; }
 .budget-note { display: block; margin-top: 6px; color: #7a858e; font-size: 10px; }
 .budget-row.is-over .budget-note { color: #b25c5c; }
 @media (max-width: 560px) { .budget-form { grid-template-columns: 1fr 1fr; } .cycle-bar { flex-direction: column; align-items: flex-start; } }
+.cycle-hint { margin: 0; color: #7a858e; font-size: 11px; line-height: 1.6; }
+.cycle-preview { padding: 10px 12px; border: 1px solid #e5eaee; border-radius: 9px; background: #fbfcfc; color: #52616a; font-size: 12px; }
+.cycle-preview strong { color: #2a3a43; }
