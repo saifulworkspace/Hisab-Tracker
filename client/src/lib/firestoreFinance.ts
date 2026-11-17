@@ -9,10 +9,15 @@ export type PersonRow = { id: string; personName: string; amount: number; curren
 export type PropertyPayment = { id: string; amount: number; paymentDate: string; currency: Currency; notes?: string };
 export type PropertyRow = { id: string; name: string; budget: number; currency: Currency; notes?: string; startDate?: string; payments: PropertyPayment[]; updatedAt?: number };
 export type FinanceTransaction = { id: string; personName: string; kind: "receivable_received" | "payable_paid"; amount: number; currency: Currency; transactionDate: string; notes?: string; createdAt: number };
-export type WalletEntry = { id: string; type: "salary" | "cost"; amount: number; currency: Currency; date: string; notes?: string; createdAt: number };
-export type FinanceData = { receivables: PersonRow[]; payables: PersonRow[]; properties: PropertyRow[]; transactions: FinanceTransaction[]; wallet: WalletEntry[] };
+export type WalletEntry = { id: string; type: "salary" | "cost"; amount: number; currency: Currency; date: string; notes?: string; category?: string; createdAt: number };
+export type WalletBudget = { id: string; category: string; amount: number; currency: Currency };
+export type WalletSettings = { salaryDay: number; customCategories: string[]; budgets: WalletBudget[] };
+export const DEFAULT_WALLET_CATEGORIES = ["Food / খাবার", "Rent / ভাড়া", "Recharge / রিচার্জ", "Transport / যাতায়াত", "Sent home / দেশে পাঠানো", "Shopping / বাজার", "Health / চিকিৎসা", "Other / অন্যান্য"];
+export const emptyWalletSettings: WalletSettings = { salaryDay: 1, customCategories: [], budgets: [] };
+export const allCategories = (settings: WalletSettings) => Array.from(new Set([...DEFAULT_WALLET_CATEGORIES, ...settings.customCategories]));
+export type FinanceData = { receivables: PersonRow[]; payables: PersonRow[]; properties: PropertyRow[]; transactions: FinanceTransaction[]; wallet: WalletEntry[]; settings: WalletSettings };
 
-export const emptyFinanceData: FinanceData = { receivables: [], payables: [], properties: [], transactions: [], wallet: [] };
+export const emptyFinanceData: FinanceData = { receivables: [], payables: [], properties: [], transactions: [], wallet: [], settings: emptyWalletSettings };
 export const getUserCollectionPath = (uid: string, collectionName: string) => `users/${uid}/${collectionName}`;
 const path = (uid: string, name: string) => collection(firestore!, "users", uid, name);
 const now = () => Date.now();
@@ -40,7 +45,11 @@ export function useFirebaseFinance(user: User | null) {
     const unsubWallet = onSnapshot(path(user.uid, "wallet"), (snapshot) => {
       setData((current) => ({ ...current, wallet: snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as WalletEntry)).sort((a, b) => b.createdAt - a.createdAt) }));
     }, (reason) => setError(reason.message));
-    return () => { unsubReceivables(); unsubPayables(); unsubProperties(); unsubTransactions(); unsubWallet(); };
+    const unsubSettings = onSnapshot(doc(firestore!, "users", user.uid, "settings", "wallet"), (snapshot) => {
+      const value = snapshot.data() as Partial<WalletSettings> | undefined;
+      setData((current) => ({ ...current, settings: { salaryDay: Number(value?.salaryDay) || 1, customCategories: value?.customCategories ?? [], budgets: value?.budgets ?? [] } }));
+    }, (reason) => setError(reason.message));
+    return () => { unsubReceivables(); unsubPayables(); unsubProperties(); unsubTransactions(); unsubWallet(); unsubSettings(); };
   }, [user]);
 
   const summary = useMemo(() => {
@@ -122,12 +131,30 @@ export async function saveProperty(userId: string, input: { id?: string; name: s
 }
 export async function addPropertyPayment(userId: string, property: PropertyRow, payment: Omit<PropertyPayment, "id">) { const next = { ...property, payments: [...property.payments, { ...payment, id: crypto.randomUUID(), amount: Number(payment.amount) }], updatedAt: now() }; await setDoc(doc(requireDb(), "users", userId, "properties", property.id), next); }
 export async function removeProperty(userId: string, id: string) { await deleteDoc(doc(requireDb(), "users", userId, "properties", id)); }
-export async function addWalletEntry(userId: string, input: { type: "salary" | "cost"; amount: number; currency: Currency; date?: string; notes?: string }) {
+export async function addWalletEntry(userId: string, input: { type: "salary" | "cost"; amount: number; currency: Currency; date?: string; notes?: string; category?: string }) {
   const db = requireDb();
-  await addDoc(collection(db, "users", userId, "wallet"), { type: input.type, amount: Number(input.amount), currency: input.currency, date: input.date || new Date().toISOString().slice(0, 10), notes: input.notes?.trim() ?? "", createdAt: now() });
+  await addDoc(collection(db, "users", userId, "wallet"), { type: input.type, amount: Number(input.amount), currency: input.currency, date: input.date || new Date().toISOString().slice(0, 10), notes: input.notes?.trim() ?? "", category: input.category?.trim() ?? "", createdAt: now() });
 }
-export async function updateWalletEntry(userId: string, id: string, input: { type: "salary" | "cost"; amount: number; currency: Currency; date: string; notes?: string }) {
+export async function updateWalletEntry(userId: string, id: string, input: { type: "salary" | "cost"; amount: number; currency: Currency; date: string; notes?: string; category?: string }) {
   const db = requireDb();
-  await setDoc(doc(db, "users", userId, "wallet", id), { type: input.type, amount: Number(input.amount), currency: input.currency, date: input.date, notes: input.notes?.trim() ?? "", updatedAt: now() }, { merge: true });
+  await setDoc(doc(db, "users", userId, "wallet", id), { type: input.type, amount: Number(input.amount), currency: input.currency, date: input.date, notes: input.notes?.trim() ?? "", category: input.category?.trim() ?? "", updatedAt: now() }, { merge: true });
 }
 export async function removeWalletEntry(userId: string, id: string) { await deleteDoc(doc(requireDb(), "users", userId, "wallet", id)); }
+export async function saveWalletSettings(userId: string, patch: Partial<WalletSettings>) {
+  await setDoc(doc(requireDb(), "users", userId, "settings", "wallet"), { ...patch, updatedAt: now() }, { merge: true });
+}
+// Salary-cycle window (inclusive, YYYY-MM-DD). salaryDay=5 -> 5th of this month to 4th of next. offset -1 = previous cycle.
+export function getCycle(salaryDay: number, offset = 0, ref = new Date()) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const clamp = (y: number, m: number, d: number) => Math.min(d, new Date(y, m + 1, 0).getDate());
+  const day = Math.min(Math.max(1, Math.floor(salaryDay) || 1), 31);
+  let m = ref.getMonth();
+  if (ref.getDate() < clamp(ref.getFullYear(), m, day)) m -= 1;
+  const base = new Date(ref.getFullYear(), m + offset, 1);
+  const start = new Date(base.getFullYear(), base.getMonth(), clamp(base.getFullYear(), base.getMonth(), day));
+  const next = new Date(base.getFullYear(), base.getMonth() + 1, 1);
+  const nextStart = new Date(next.getFullYear(), next.getMonth(), clamp(next.getFullYear(), next.getMonth(), day));
+  const end = new Date(nextStart.getFullYear(), nextStart.getMonth(), nextStart.getDate() - 1);
+  return { start: fmt(start), end: fmt(end) };
+}
