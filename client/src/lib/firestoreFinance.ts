@@ -5,7 +5,7 @@ import { firestore } from "./firebase";
 
 export type Currency = "BDT" | "SR";
 export type PersonEntry = { id: string; amount: number; date: string; notes?: string; createdAt: number };
-export type PersonRow = { id: string; personName: string; amount: number; currency: Currency; notes?: string; entries?: PersonEntry[]; updatedAt?: number };
+export type PersonRow = { id: string; personName: string; amount: number; currency: Currency; notes?: string; phone?: string; entries?: PersonEntry[]; updatedAt?: number };
 export type PropertyPayment = { id: string; amount: number; paymentDate: string; currency: Currency; notes?: string };
 export type PropertyRow = { id: string; name: string; budget: number; currency: Currency; notes?: string; startDate?: string; payments: PropertyPayment[]; updatedAt?: number };
 export type FinanceTransaction = { id: string; personName: string; kind: "receivable_received" | "payable_paid"; amount: number; currency: Currency; transactionDate: string; notes?: string; createdAt: number };
@@ -15,9 +15,9 @@ export type WalletSettings = { salaryDay: number; customCategories: string[]; bu
 export const DEFAULT_WALLET_CATEGORIES = ["Food / খাবার", "Rent / ভাড়া", "Recharge / রিচার্জ", "Transport / যাতায়াত", "Sent home / দেশে পাঠানো", "Shopping / বাজার", "Health / চিকিৎসা", "Other / অন্যান্য"];
 export const emptyWalletSettings: WalletSettings = { salaryDay: 1, customCategories: [], budgets: [] };
 export const allCategories = (settings: WalletSettings) => Array.from(new Set([...DEFAULT_WALLET_CATEGORIES, ...settings.customCategories]));
-export type FinanceData = { receivables: PersonRow[]; payables: PersonRow[]; properties: PropertyRow[]; transactions: FinanceTransaction[]; wallet: WalletEntry[]; settings: WalletSettings };
+export type FinanceData = { receivables: PersonRow[]; payables: PersonRow[]; properties: PropertyRow[]; transactions: FinanceTransaction[]; wallet: WalletEntry[]; settings: WalletSettings; cycleStatus: "loading" | "unset" | "set" };
 
-export const emptyFinanceData: FinanceData = { receivables: [], payables: [], properties: [], transactions: [], wallet: [], settings: emptyWalletSettings };
+export const emptyFinanceData: FinanceData = { receivables: [], payables: [], properties: [], transactions: [], wallet: [], settings: emptyWalletSettings, cycleStatus: "loading" };
 export const getUserCollectionPath = (uid: string, collectionName: string) => `users/${uid}/${collectionName}`;
 const path = (uid: string, name: string) => collection(firestore!, "users", uid, name);
 const now = () => Date.now();
@@ -47,7 +47,7 @@ export function useFirebaseFinance(user: User | null) {
     }, (reason) => setError(reason.message));
     const unsubSettings = onSnapshot(doc(firestore!, "users", user.uid, "settings", "wallet"), (snapshot) => {
       const value = snapshot.data() as Partial<WalletSettings> | undefined;
-      setData((current) => ({ ...current, settings: { salaryDay: Number(value?.salaryDay) || 1, customCategories: value?.customCategories ?? [], budgets: value?.budgets ?? [] } }));
+      setData((current) => ({ ...current, cycleStatus: value?.salaryDay ? "set" : "unset", settings: { salaryDay: Number(value?.salaryDay) || 1, customCategories: value?.customCategories ?? [], budgets: value?.budgets ?? [] } }));
     }, (reason) => setError(reason.message));
     return () => { unsubReceivables(); unsubPayables(); unsubProperties(); unsubTransactions(); unsubWallet(); unsubSettings(); };
   }, [user]);
@@ -69,11 +69,11 @@ export function useFirebaseFinance(user: User | null) {
 function requireDb() { if (!firestore) throw new Error("Firebase is not configured. Add the VITE_FIREBASE_* variables."); return firestore; }
 function clean(value: string) { return value.trim().replace(/\s+/g, " "); }
 
-export async function savePerson(userId: string, kind: "receivables" | "payables", input: { id?: string; personName: string; amount: number; currency: Currency; notes?: string }) {
+export async function savePerson(userId: string, kind: "receivables" | "payables", input: { id?: string; personName: string; amount: number; currency: Currency; notes?: string; phone?: string }) {
   const db = requireDb(); const id = input.id ?? crypto.randomUUID();
-  await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount: Number(input.amount), currency: input.currency, notes: input.notes?.trim() ?? "", updatedAt: now() }, { merge: true });
+  await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount: Number(input.amount), currency: input.currency, notes: input.notes?.trim() ?? "", phone: input.phone?.trim() ?? "", updatedAt: now() }, { merge: true });
 }
-export async function addPersonEntry(userId: string, kind: "receivables" | "payables", matched: PersonRow | undefined, input: { personName: string; amount: number; currency: Currency; date?: string; notes?: string }) {
+export async function addPersonEntry(userId: string, kind: "receivables" | "payables", matched: PersonRow | undefined, input: { personName: string; amount: number; currency: Currency; date?: string; notes?: string; phone?: string }) {
   const db = requireDb();
   const amount = Number(input.amount);
   const entryDate = input.date || new Date().toISOString().slice(0, 10);
@@ -81,10 +81,10 @@ export async function addPersonEntry(userId: string, kind: "receivables" | "paya
   if (matched) {
     const nextEntries = [...(matched.entries ?? []), entry];
     const nextAmount = Number(matched.amount) + amount;
-    await setDoc(doc(db, "users", userId, kind, matched.id), { amount: nextAmount, entries: nextEntries, updatedAt: now() }, { merge: true });
+    await setDoc(doc(db, "users", userId, kind, matched.id), { amount: nextAmount, entries: nextEntries, ...(input.phone?.trim() ? { phone: input.phone.trim() } : {}), updatedAt: now() }, { merge: true });
   } else {
     const id = crypto.randomUUID();
-    await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount, currency: input.currency, notes: input.notes?.trim() ?? "", entries: [entry], updatedAt: now() }, { merge: true });
+    await setDoc(doc(db, "users", userId, kind, id), { personName: clean(input.personName), amount, currency: input.currency, notes: input.notes?.trim() ?? "", phone: input.phone?.trim() ?? "", entries: [entry], updatedAt: now() }, { merge: true });
   }
 }
 export async function updatePersonEntry(userId: string, kind: "receivables" | "payables", row: PersonRow, entryId: string, input: { amount: number; date: string; notes?: string }) {
